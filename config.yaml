@@ -1,0 +1,33 @@
+version: v1.0.0
+name: App Name
+port: 8081
+api_secret: 24bc50d85ad8fa9cda686145cf1f8aca
+database:
+  mysql:
+    enable: true
+    driver: mysql
+    host: 127.0.0.1
+    port: 3306
+    username: root
+    password: root
+    database: chat_sqe
+    autoReconnect: true
+    startInterval: 2 #second
+    maxError: 5
+    timeoutConnection: 5000 #milisecond
+  redis:
+    enable: true
+    host: 127.0.0.1
+    password: 12345
+    port: 6379
+    autoReconnect: true
+    startInterval: 2
+    maxError: 5
+  rabbitmq:
+    enable: true
+    host: "127.0.0.1"
+    port: 5672
+    username: "guest"
+    password: "guest"
+    reconnectDuration: 2
+    dedicatedConnection: false

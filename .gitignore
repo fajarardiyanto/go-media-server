@@ -1,0 +1,14 @@
+./views
+views
+assets
+.idea/
+.vscode/
+.DS_Store
+client/
+libs/
+bin/
+tmp/
+external/files
+run.sh
+sqlservertest
+*.app
