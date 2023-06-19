@@ -12,6 +12,7 @@ type Config struct {
 	Name      string `yaml:"name"`
 	Port      string `yaml:"port"`
 	ApiSecret string `yaml:"api_secret" default:"SECRET"`
+	Message   string `yaml:"message" default:"CHAT_MESSAGE"`
 	Database  struct {
 		Mysql    interfaces.SQLConfig              `yaml:"mysql"`
 		Redis    interfaces.RedisProviderConfig    `yaml:"redis"`

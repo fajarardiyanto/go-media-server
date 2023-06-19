@@ -2,6 +2,7 @@ version: v1.0.0
 name: App Name
 port: 8081
 api_secret: 24bc50d85ad8fa9cda686145cf1f8aca
+message: CHAT_MESSAGE
 database:
   mysql:
     enable: true
