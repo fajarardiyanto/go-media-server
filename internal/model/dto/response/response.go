@@ -1,4 +1,4 @@
-package model
+package response
 
 type Response struct {
 	Error   bool        `json:"error"`

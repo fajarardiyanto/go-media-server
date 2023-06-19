@@ -5,25 +5,25 @@ import (
 	"sync"
 
 	"github.com/fajarardiyanto/go-media-server/config"
-	"github.com/fajarardiyanto/go-media-server/internal/model"
+	"github.com/fajarardiyanto/go-media-server/internal/model/dto/response"
 	"github.com/fajarardiyanto/go-media-server/pkg/chat"
 	"github.com/fajarardiyanto/go-media-server/pkg/protocol"
 	"github.com/gin-gonic/gin"
 )
 
-type ChatHandler struct {
+type chatHandler struct {
 	sync.Mutex
 }
 
-func NewChatHandler() *ChatHandler {
-	return &ChatHandler{}
+func NewChatHandler() *chatHandler {
+	return &chatHandler{}
 }
 
-func (s *ChatHandler) RoomChat(c *gin.Context) {
+func (s *chatHandler) RoomChat(c *gin.Context) {
 	c.HTML(http.StatusOK, "layouts/main", nil)
 }
 
-func (s *ChatHandler) RoomChatWebsocket(c *gin.Context) {
+func (s *chatHandler) RoomChatWebsocket(c *gin.Context) {
 	uuid := c.Param("uuid")
 	if uuid == "" {
 		return
@@ -40,7 +40,7 @@ func (s *ChatHandler) RoomChatWebsocket(c *gin.Context) {
 	s.Unlock()
 	if room == nil {
 		config.GetLogger().Debug("room id is null")
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: "room id is null",
 		})
@@ -48,7 +48,7 @@ func (s *ChatHandler) RoomChatWebsocket(c *gin.Context) {
 	}
 	if room.Hub == nil {
 		config.GetLogger().Debug("hub is nil")
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: "hub is null",
 		})
@@ -59,11 +59,11 @@ func (s *ChatHandler) RoomChatWebsocket(c *gin.Context) {
 	conn.PeerChatConn(unsafeConn, room.Hub)
 }
 
-func (s *ChatHandler) StreamChatWebsocket(c *gin.Context) {
+func (s *chatHandler) StreamChatWebsocket(c *gin.Context) {
 	sid := c.Param("suuid")
 	if sid == "" {
 		config.GetLogger().Debug("stream id is nil")
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: "stream id is null",
 		})

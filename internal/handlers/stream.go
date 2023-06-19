@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/fajarardiyanto/go-media-server/config"
-	"github.com/fajarardiyanto/go-media-server/internal/model"
+	"github.com/fajarardiyanto/go-media-server/internal/model/dto/response"
 	"github.com/fajarardiyanto/go-media-server/pkg/dto"
 	"github.com/fajarardiyanto/go-media-server/pkg/protocol"
 	"github.com/gin-gonic/gin"
@@ -16,15 +16,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type StreamHandler struct {
+type streamHandler struct {
 	sync.Mutex
 }
 
-func NewStreamHandler() *StreamHandler {
-	return &StreamHandler{}
+func NewStreamHandler() *streamHandler {
+	return &streamHandler{}
 }
 
-func (s *StreamHandler) Stream(c *gin.Context) {
+func (s *streamHandler) Stream(c *gin.Context) {
 	suuid := c.Param("suuid")
 	if suuid == "" {
 		c.Status(400)
@@ -46,7 +46,7 @@ func (s *StreamHandler) Stream(c *gin.Context) {
 			Type:                "stream",
 		}
 
-		c.JSON(http.StatusOK, model.Response{
+		c.JSON(http.StatusOK, response.Response{
 			Error: false,
 			Data:  data,
 		})
@@ -54,7 +54,7 @@ func (s *StreamHandler) Stream(c *gin.Context) {
 	}
 	s.Unlock()
 
-	c.JSON(http.StatusOK, model.Response{
+	c.JSON(http.StatusOK, response.Response{
 		Error: false,
 		Data: dto.CreateNoStream{
 			NoStream: "true",
@@ -63,7 +63,7 @@ func (s *StreamHandler) Stream(c *gin.Context) {
 	})
 }
 
-func (s *StreamHandler) StreamWebsocket(c *gin.Context) {
+func (s *streamHandler) StreamWebsocket(c *gin.Context) {
 	suuid := c.Param("suuid")
 	if suuid == "" {
 		return
@@ -85,7 +85,7 @@ func (s *StreamHandler) StreamWebsocket(c *gin.Context) {
 	s.Unlock()
 }
 
-func (s *StreamHandler) StreamViewerWebsocket(c *gin.Context) {
+func (s *streamHandler) StreamViewerWebsocket(c *gin.Context) {
 	suuid := c.Param("suuid")
 	if suuid == "" {
 		return
@@ -106,7 +106,7 @@ func (s *StreamHandler) StreamViewerWebsocket(c *gin.Context) {
 	s.Unlock()
 }
 
-func (s *StreamHandler) viewerConn(c *websocket.Conn, p *protocol.Peers) {
+func (s *streamHandler) viewerConn(c *websocket.Conn, p *protocol.Peers) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	defer c.Close()

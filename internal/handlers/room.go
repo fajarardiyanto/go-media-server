@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/fajarardiyanto/go-media-server/config"
-	"github.com/fajarardiyanto/go-media-server/internal/model"
+	"github.com/fajarardiyanto/go-media-server/internal/model/dto/response"
 	"github.com/fajarardiyanto/go-media-server/pkg/chat"
 	"github.com/fajarardiyanto/go-media-server/pkg/dto"
 	"github.com/fajarardiyanto/go-media-server/pkg/protocol"
@@ -21,30 +21,30 @@ import (
 	"github.com/pion/webrtc/v3"
 )
 
-type RoomHandler struct {
+type roomHandler struct {
 	sync.Mutex
 }
 
-func NewRoomHandler() *RoomHandler {
-	return &RoomHandler{}
+func NewRoomHandler() *roomHandler {
+	return &roomHandler{}
 }
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func (s *RoomHandler) RoomCreate(c *gin.Context) {
+func (s *roomHandler) RoomCreate(c *gin.Context) {
 	id := uuid.New().String()
-	c.JSON(http.StatusOK, model.Response{
+	c.JSON(http.StatusOK, response.Response{
 		Error: false,
 		Data:  id,
 	})
 }
 
-func (s *RoomHandler) Room(c *gin.Context) {
+func (s *roomHandler) Room(c *gin.Context) {
 	id := c.Param("uuid")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: "uuid can't be null",
 		})
@@ -72,13 +72,13 @@ func (s *RoomHandler) Room(c *gin.Context) {
 		Type:                "room",
 	}
 
-	c.JSON(http.StatusOK, model.Response{
+	c.JSON(http.StatusOK, response.Response{
 		Error: false,
 		Data:  data,
 	})
 }
 
-func (s *RoomHandler) RoomWebsocket(c *gin.Context) {
+func (s *roomHandler) RoomWebsocket(c *gin.Context) {
 	id := c.Param("uuid")
 	if id == "" {
 		return
@@ -87,7 +87,7 @@ func (s *RoomHandler) RoomWebsocket(c *gin.Context) {
 	unsafeConn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		config.GetLogger().Error("upgrade: %v", err)
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: err.Error(),
 		})
@@ -98,7 +98,7 @@ func (s *RoomHandler) RoomWebsocket(c *gin.Context) {
 	protocol.RoomConn(unsafeConn, room.Peers)
 }
 
-func (s *RoomHandler) createOrGetRoom(rId string) (string, string, *protocol.Room) {
+func (s *roomHandler) createOrGetRoom(rId string) (string, string, *protocol.Room) {
 	s.Lock()
 	defer s.Unlock()
 
@@ -128,7 +128,7 @@ func (s *RoomHandler) createOrGetRoom(rId string) (string, string, *protocol.Roo
 	return rId, id, room
 }
 
-func (s *RoomHandler) RoomViewerWebsocket(c *gin.Context) {
+func (s *roomHandler) RoomViewerWebsocket(c *gin.Context) {
 	id := c.Param("uuid")
 	if id == "" {
 		return
@@ -149,7 +149,7 @@ func (s *RoomHandler) RoomViewerWebsocket(c *gin.Context) {
 	s.Unlock()
 }
 
-func (s *RoomHandler) roomViewerConn(c *websocket.Conn, p *protocol.Peers) {
+func (s *roomHandler) roomViewerConn(c *websocket.Conn, p *protocol.Peers) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	defer c.Close()

@@ -16,8 +16,8 @@ func NewMessageService() repository.MessageRepository {
 	return &messageService{}
 }
 
-func (s *messageService) SendMessage(message request.RequestMessageModel) error {
-	req := model.MessageModel{
+func (s *messageService) SendMessage(message request.RequestMessageModel) (*model.MessageModel, error) {
+	data := model.MessageModel{
 		Uuid:        uuid.NewString(),
 		FromUser:    message.FromUser,
 		ToUser:      message.ToUser,
@@ -26,9 +26,9 @@ func (s *messageService) SendMessage(message request.RequestMessageModel) error 
 		CreatedAt:   time.Now(),
 	}
 
-	if err := config.GetDBConn().Orm().Debug().Model(&model.MessageModel{}).Create(&req).Error; err != nil {
-		return err
+	if err := config.GetDBConn().Orm().Debug().Model(&model.MessageModel{}).Create(&data).Error; err != nil {
+		return nil, err
 	}
 
-	return nil
+	return &data, nil
 }

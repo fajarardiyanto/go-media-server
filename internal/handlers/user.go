@@ -1,29 +1,31 @@
 package handlers
 
 import (
+	"net/http"
+	"sync"
+
 	"github.com/fajarardiyanto/go-media-server/config"
 	"github.com/fajarardiyanto/go-media-server/internal/model"
+	"github.com/fajarardiyanto/go-media-server/internal/model/dto/response"
 	"github.com/fajarardiyanto/go-media-server/internal/repository"
 	"github.com/fajarardiyanto/go-media-server/pkg/auth"
 	"github.com/fajarardiyanto/go-media-server/util"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"sync"
 )
 
-type UserHandler struct {
+type userHandler struct {
 	sync.Mutex
 	repo repository.UserRepository
 }
 
-func NewUserHandler(repo repository.UserRepository) *UserHandler {
-	return &UserHandler{repo: repo}
+func NewUserHandler(repo repository.UserRepository) *userHandler {
+	return &userHandler{repo: repo}
 }
 
-func (s *UserHandler) RegisterHandler(c *gin.Context) {
+func (s *userHandler) RegisterHandler(c *gin.Context) {
 	u := model.UserReqModel{}
 	if err := c.ShouldBindJSON(&u); err != nil {
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: err.Error(),
 		})
@@ -31,7 +33,7 @@ func (s *UserHandler) RegisterHandler(c *gin.Context) {
 	}
 
 	if _, err := s.repo.UserExist(u.Username); err == nil {
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: "username already exist!",
 		})
@@ -47,42 +49,42 @@ func (s *UserHandler) RegisterHandler(c *gin.Context) {
 	res, err := s.repo.Register(req)
 	if err != nil {
 		config.GetLogger().Error(err.Error())
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: "something went wrong while registering the user. please try again after sometime.",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, model.Response{
+	c.JSON(http.StatusOK, response.Response{
 		Error: false,
 		Data:  res,
 	})
 }
 
-func (s *UserHandler) LoginHandler(c *gin.Context) {
+func (s *userHandler) LoginHandler(c *gin.Context) {
 	u := &model.UserReqModel{}
 	if err := c.ShouldBindJSON(&u); err != nil {
-		c.JSON(http.StatusBadRequest, model.Response{
+		c.JSON(http.StatusBadRequest, response.Response{
 			Error:   true,
 			Message: err.Error(),
 		})
 		return
 	}
 
-	res, err := s.repo.UserExist(u.Username)
+	user, err := s.repo.UserExist(u.Username)
 	if err != nil {
 		config.GetLogger().Error(err)
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: "Invalid username/password",
 		})
 		return
 	}
 
-	if err = util.VerifyPassword(res.Password, u.Password); err != nil {
+	if err = util.VerifyPassword(user.Password, u.Password); err != nil {
 		config.GetLogger().Error(err)
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: "Invalid username/password",
 		})
@@ -90,27 +92,27 @@ func (s *UserHandler) LoginHandler(c *gin.Context) {
 	}
 
 	userToken := model.UserTokenModel{
-		ID:       res.ID,
-		Username: res.Username,
-		UserType: res.UserType,
+		ID:       user.ID,
+		Username: user.Username,
+		UserType: user.UserType,
 	}
 
 	token, err := auth.CreateToken(userToken)
 	if err != nil {
 		config.GetLogger().Error(err)
-		c.JSON(http.StatusInternalServerError, model.Response{
+		c.JSON(http.StatusInternalServerError, response.Response{
 			Error:   true,
 			Message: "Something went wrong",
 		})
 		return
 	}
 
-	response := model.UserResponseModel{
-		User:  *res,
+	res := model.UserResponseModel{
+		User:  *user,
 		Token: token,
 	}
 
-	c.JSON(http.StatusOK, model.Response{
-		Data: response,
+	c.JSON(http.StatusOK, response.Response{
+		Data: res,
 	})
 }

@@ -27,11 +27,14 @@ func Run() error {
 	// services
 	userSvc := service.NewUserService()
 
+	messageService := service.NewMessageService()
+
 	// handlers
 	roomHandler := handlers.NewRoomHandler()
 	chatHandler := handlers.NewChatHandler()
 	streamHandler := handlers.NewStreamHandler()
 	userHandler := handlers.NewUserHandler(userSvc)
+	messageHandler := handlers.NewMessageHandler(messageService)
 
 	r.GET("/", handlers.Ping)
 	r.POST("/register", userHandler.RegisterHandler)
@@ -39,7 +42,7 @@ func Run() error {
 
 	// r.Use(middleware.AuthMiddleware())
 
-	r.GET("/room/create", roomHandler.RoomCreate)
+	r.POST("/room/create", roomHandler.RoomCreate)
 	r.GET("/room/:uuid", roomHandler.Room)
 	r.GET("/room/:uuid/websocket", roomHandler.RoomWebsocket)
 
@@ -51,7 +54,9 @@ func Run() error {
 	r.GET("/stream/:suuid/websocket", streamHandler.StreamWebsocket)
 	r.GET("/stream/:suuid/chat/websocket", chatHandler.StreamChatWebsocket)
 	r.GET("/stream/:suuid/viewer/websocket", streamHandler.StreamViewerWebsocket)
-	//r.Static("/static", "./assets")
+
+	// messages
+	r.POST("/send-message", messageHandler.SendMessage)
 
 	protocol.Rooms = make(map[string]*protocol.Room)
 	protocol.Streams = make(map[string]*protocol.Room)
